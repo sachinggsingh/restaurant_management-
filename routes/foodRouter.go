@@ -11,6 +11,6 @@ func FoodRouter(incommingRoutes *gin.Engine) {
 	incommingRoutes.POST("/food", controller.CreateFood())
 	incommingRoutes.GET("/food/:id", controller.GetFood())
 	incommingRoutes.GET("/foods", controller.GetAllFoods())
-	incommingRoutes.PUT("/food/:id", controller.UpdateFood())
-	incommingRoutes.DELETE("/food/:id", controller.DeleteFood())
+	incommingRoutes.PATCH("/food/:id", controller.UpdateFood())
+	// incommingRoutes.DELETE("/food/:id", controller.DeleteFood())
 }
