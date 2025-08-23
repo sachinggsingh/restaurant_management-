@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
 	"os"
 	"resturnat-management/database"
-	"resturnat-management/routes"
+
+	// "resturnat-management/routes"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -19,15 +22,22 @@ func main() {
 	}
 	router := gin.New()
 	router.Use(gin.Logger())
-	routes.UserRouter(router)
-	router.Use(middleware.AuthMiddleware())
 
-	routes.FoodRouter(router)
-	routes.MenuRouter(router)
-	routes.OrderRouter(router)
-	routes.OrderItemRouter(router)
-	routes.TableRouter(router)
-	routes.InvoiceRouter(router)
+	router.GET("/", func(c *gin.Context) {
+		fmt.Println("Welcome to the Restaurant Management System")
+		c.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
+	})
+	// routes.UserRouter(router)
+	// router.Use(middleware.AuthMiddleware())
+
+	// routes.FoodRouter(router)
+	// routes.MenuRouter(router)
+	// routes.OrderRouter(router)
+	// routes.OrderItemRouter(router)
+	// routes.TableRouter(router)
+	// routes.InvoiceRouter(router)
 	// router.NoteRouter(router)
 
 	router.Run(":" + port)
