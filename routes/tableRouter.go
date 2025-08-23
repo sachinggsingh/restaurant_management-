@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// modi
 func TableRouter(incomingRoutes *gin.Engine) {
 	// Use middleware if needed
 	incomingRoutes.POST("/table", controller.CreateTable())
