@@ -20,13 +20,13 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Logger())
 	routes.UserRouter(router)
-	// router.Use(middleware.AuthMiddleware())
+	router.Use(middleware.AuthMiddleware())
 
 	routes.FoodRouter(router)
 	routes.MenuRouter(router)
-	// router.OrderRouter(router)
-	// router.OrderItemRouter(router)
-	// router.TableRouter(router)
+	routes.OrderRouter(router)
+	routes.OrderItemRouter(router)
+	routes.TableRouter(router)
 	routes.InvoiceRouter(router)
 	// router.NoteRouter(router)
 
