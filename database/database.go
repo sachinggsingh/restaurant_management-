@@ -13,18 +13,14 @@ import (
 
 func DBinstance() *mongo.Client {
 	MongoDB := os.Getenv("MONGODB_URI")
-
-	fmt.Println(MongoDB)
-	client, err := mongo.NewClient(options.Client().ApplyURI(MongoDB))
-	if err != nil {
-		log.Fatal(err)
+	if MongoDB == "" {
+		log.Fatal("MONGODB_URI not set")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-
 	defer cancel()
 
-	err = client.Connect(ctx)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(MongoDB))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,6 +32,5 @@ func DBinstance() *mongo.Client {
 var Client *mongo.Client = DBinstance()
 
 func OpenCollection(client *mongo.Client, collectionName string) *mongo.Collection {
-	collection := client.Database(("resturant")).Collection(collectionName)
-	return collection
+	return client.Database("restaurant").Collection(collectionName)
 }
