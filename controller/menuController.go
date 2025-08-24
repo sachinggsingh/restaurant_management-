@@ -16,7 +16,16 @@ var menuCollection *mongo.Collection = database.OpenCollection(database.Client, 
 
 func GetMenu() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		menuId := c.Param("menu_id")
+		var menu models.Menu
 
+		err := menuCollection.FindOne(ctx, bson.M{"menu_id": menuId}).Decode(&menu)
+		defer cancel()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while fetching the menu item"})
+		}
+		c.JSON(http.StatusOK, menu)
 	}
 }
 func GetAllMenus() gin.HandlerFunc {

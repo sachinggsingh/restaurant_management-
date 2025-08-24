@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -49,7 +50,35 @@ func CreateFood() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		validate
+
+		// validating
+		validateError := validate.Struct(food)
+		if validateError != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": validateError.Error()})
+			return
+		}
+
+		// finding if the nemu exist or not
+		err := menuCollection.FindOne(ctx, bson.M{"menu_id": food.Menu_id}).Decode(&menu)
+		defer cancel()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "menu did not found"})
+			return
+		}
+
+		food.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+		food.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+		food.Food_id = primitive.NewObjectID().Hex()
+		var num = toFixed(*food.Price, 2)
+		food.Price = &num
+
+		result, insertErr := foodCollection.InsertOne(ctx, food)
+		if insertErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "food item was not created"})
+			return
+		}
+		c.JSON(http.StatusOK, result)
+
 	}
 }
 
