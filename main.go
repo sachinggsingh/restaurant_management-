@@ -4,22 +4,24 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"resturnat-management/database"
+
+	// "resturnat-management/database"
 
 	// "resturnat-management/routes"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
+	// "go.mongodb.org/mongo-driver/mongo"
 	//  middle"resturant-management/middleware"
 )
 
-var foodCollection *mongo.Collection = database.OpenCollection(database.Client, "Food")
+// var foodCollection *mongo.Collection = database.OpenCollection(database.Client, "Food")
 
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
+
 	router := gin.New()
 	router.Use(gin.Logger())
 
