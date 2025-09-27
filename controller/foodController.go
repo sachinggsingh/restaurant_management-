@@ -81,7 +81,6 @@ func CreateFood() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": validateError.Error()})
 			return
 		}
-
 		// finding if the nemu exist or not
 		err := menuCollection.FindOne(ctx, bson.M{"menu_id": food.Menu_id}).Decode(&menu)
 		defer cancel()
