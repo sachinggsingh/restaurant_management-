@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"resturnat-management/database"
 	"resturnat-management/models"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +20,30 @@ var validate = validator.New()
 
 func GetAllFoods() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 
+		// pagination
+		recordPerPage, err := strconv.Atoi(c.Query("recordPerPage"))
+		if err != nil || recordPerPage < 1 {
+			recordPerPage = 10
+		}
+		page, err := strconv.Atoi(c.Query("page"))
+		if err != nil || page < 1 {
+			page = 1
+		}
+		startIndex := (page - 1) * recordPerPage
+		startIndex, err = strconv.Atoi(c.Query("startIndex"))
+
+		// aggegation
+		mathcStage := bson.D{{"$match", bson.D{{}}}}
+		groupStage := bson.D{
+			{Key: "$group", Value: bson.D{
+				{Key: "_id", Value: nil},
+				{Key: "total_count", Value: bson.D{{Key: "$sum", Value: 1}}},
+				{Key: "data", Value: bson.D{{Key: "$push", Value: "$$ROOT"}}},
+			}},
+		}
+		projectStage := bson.D{{"$project", bson.D{{}}}}
 	}
 }
 
@@ -81,17 +105,19 @@ func CreateFood() gin.HandlerFunc {
 
 	}
 }
+func round(num float64) int {
+	return
+}
+
+func toFixed(num float64, precision int) float64 {
+	return
+}
 
 func UpdateFood() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// var ctx,cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		// foodId := c.Param("food_id")
+		// var food models.Food
 
 	}
 }
-
-// func round(num float64) int {
-// 	// return
-// }
-
-// func toFixed(num float64, precision int) float64 {
-// 	// return
-// }
