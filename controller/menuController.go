@@ -19,6 +19,7 @@ var menuCollection *mongo.Collection = database.OpenCollection(database.Client, 
 func GetMenu() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 		menuId := c.Param("menu_id")
 		var menu models.Menu
 
@@ -53,7 +54,7 @@ func CreateMenu() gin.HandlerFunc {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 
 		var menu models.Menu
-
+		defer cancel()
 		if err := c.BindJSON(&menu); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -97,6 +98,7 @@ func UpdateMenu() gin.HandlerFunc {
 		menuId := c.Param("menu_id")
 		filter := bson.M{"menu_id": menuId}
 		var menu models.Menu
+		defer cancel()
 
 		if err := c.BindJSON((&menu)); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
