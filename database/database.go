@@ -18,6 +18,7 @@ func DBinstance() *mongo.Client {
 	if err := godotenv.Load(); err != nil {
 		log.Println("⚠️ No .env file found, using system environment variables")
 	}
+	fmt.Println(os.Getenv("MONGODB_URI"))
 
 	// Get MongoDB URI from env
 	MongoDB := os.Getenv("MONGODB_URI")

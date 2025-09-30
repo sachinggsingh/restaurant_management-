@@ -1,8 +1,13 @@
 package controller
 
 import (
+	"resturnat-management/database"
+
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+var tableCollection *mongo.Collection = database.OpenCollection(database.Client, "table")
 
 func CreateTable() gin.HandlerFunc {
 	return func(c *gin.Context) {
