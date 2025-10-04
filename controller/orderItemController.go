@@ -15,6 +15,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type OrderItemPack struct {
+	Table_id    *string
+	Order_items []models.OrderItem
+}
+
 var orderItemCollection *mongo.Collection = database.OpenCollection(database.Client, "orderItem")
 
 func GetAllOrderItems() gin.HandlerFunc {
@@ -54,6 +59,15 @@ func GetOrderItem() gin.HandlerFunc {
 }
 func CreateOrderItem() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		var orderItemPack OrderItemPack
+		var orderItem models.OrderItem
+
+		if err := c.BindJSON(&orderItemPack); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
 
 	}
 }
