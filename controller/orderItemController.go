@@ -57,18 +57,46 @@ func GetOrderItem() gin.HandlerFunc {
 		c.JSON(http.StatusOK, orderItem)
 	}
 }
+
 func CreateOrderItem() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
-
 		var orderItemPack OrderItemPack
-		var orderItem models.OrderItem
+		var order models.Order
 
-		if err := c.BindJSON(&orderItemPack); err != nil {
+		if err := c.BindJSON(&order); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
+		order.Order_date, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+		// order.Updated_at ,_ = time.Parse(time.RFC3339,time.Now().Format(time.RFC3339))
 
+		orderItemsToBeInserted := []interface{}{}
+		order.Table_id = orderItemPack.Table_id
+		order_id := orderItemOrderCreator(order)
+		for _, orderItem := range orderItemPack.Order_items {
+			orderItem.Order_id = order_id
+			validationErr := validate.Struct(orderItem)
+
+			if validationErr != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
+				return
+			}
+			orderItem.ID = primitive.NewObjectID()
+			orderItem.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+			orderItem.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+			orderItem.OrderItem_id = orderItem.ID.Hex()
+			var num = toFixed(*orderItem.Unit_Price, 2)
+			orderItem.Unit_Price = &num
+			orderItemsToBeInserted = append(orderItemsToBeInserted, orderItem)
+		}
+
+		insertedOrderItems, err := orderItemCollection.InsertMany(ctx, orderItemsToBeInserted)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while inserting the things"})
+		}
+		defer cancel()
+		c.JSON(http.StatusCreated, insertedOrderItems)
 	}
 }
 

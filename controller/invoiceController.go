@@ -127,7 +127,7 @@ func GetAllInvoice() gin.HandlerFunc {
 func UpdateInvoice() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-
+		defer cancel()
 		var invoice models.Invoice
 
 		if err := c.BindJSON(&invoice); err != nil {
