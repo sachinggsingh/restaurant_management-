@@ -163,6 +163,65 @@ func GetOrderItemsByOrder() gin.HandlerFunc {
 }
 
 func ItemsByOrder(id string) (OrderItems []primitive.M, err error) {
-	return
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+
+	matchStage := bson.D{
+		{Key: "$match", Value: bson.D{
+			{Key: "order_id", Value: id},
+		}},
+	}
+
+	lookUpStage := bson.D{
+		{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "food"},
+			{Key: "localField", Value: "food_id"},
+			{Key: "foreignField", Value: "food_id"},
+			{Key: "as", Value: "food"},
+		}},
+	}
+	unWindStage := bson.D{
+		{
+			Key: "$unwind", Value: bson.D{
+				{Key: "path", Value: "$food"},
+				{Key: "preserveNullAndEmptyArrays", Value: true},
+			},
+		},
+	}
+
+	lookUpStageOrder := bson.D{
+		{
+			Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "order"},
+				{Key: "localField", Value: "order_id"},
+				{Key: "foreignField", Value: "order_id"},
+				{Key: "as", Value: "order"},
+			},
+		},
+	}
+
+	unwindStageOrder := bson.D{
+		{
+			Key: "$unwind", Value: bson.D{
+				{
+					Key: "path", Value: "$order",
+				},
+				{
+					Key: "preserveNullAndEmptyArrays", Value: true,
+				},
+			},
+		},
+	}
+
+	unWindTabkeStage := bson.D{
+		{
+			Key: "$ynwind", Value: bson.D{
+				{
+					Key: "path", Value: "$table",
+				}, {
+					Key: "preserveNullAndEmptyArrays", Value: true,
+				},
+			},
+		},
+	}
 
 }
