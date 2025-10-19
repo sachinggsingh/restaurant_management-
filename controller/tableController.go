@@ -19,7 +19,7 @@ var tableCollection *mongo.Collection = database.OpenCollection(database.Client,
 func CreateTable() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-
+		defer cancel()
 		var table models.Table
 
 		if err := c.BindJSON(&table); err != nil {
@@ -50,7 +50,7 @@ func CreateTable() gin.HandlerFunc {
 func GetTable() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-
+		defer cancel()
 		tableId := c.Param("table_id")
 		var table models.Table
 
@@ -88,7 +88,7 @@ func GetAllTables() gin.HandlerFunc {
 func UpdateTable() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-
+		defer cancel()
 		tableId := c.Param("table_id")
 		var table models.Table
 		if err := c.BindJSON(&table); err != nil {
