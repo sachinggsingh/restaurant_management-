@@ -5,11 +5,11 @@ import (
 	"log"
 	"net/http"
 	"resturnat-management/database"
-	"resturnat-management/helper"
+	helper "resturnat-management/helper"
+
+	// hepler "resturnat-management/helper"
 	"resturnat-management/models"
 	"time"
-
-	hepler "resturnat-management/helper"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -96,7 +96,7 @@ func Signup() gin.HandlerFunc {
 		user.User_id = user.ID.Hex()
 
 		// generate tokens
-		token, refreshtoken, err := hepler.GenerateAllTokens(*user.Email, *user.FirstName, *user.LastName, user.User_id)
+		token, refreshtoken, err := helper.GenerateAllTokens(*user.Email, *user.FirstName, *user.LastName, user.User_id)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error generating tokens"})
 			return
