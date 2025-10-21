@@ -69,6 +69,37 @@ func GetNotes() gin.HandlerFunc {
 	}
 }
 
-// func GetNote()gin.HandlerFunc{
-// 	return func(c *gin.Context){
-// }
+func GetNote() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		orderId := c.Param("order_id")
+		noteId := c.Param("note_id")
+		var note models.Note
+
+		objID, err := primitive.ObjectIDFromHex(noteId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid note id"})
+			return
+		}
+		filter := bson.M{
+			"_id":      objID,
+			"order_id": orderId,
+		}
+
+		err = noteCollection.FindOne(ctx, filter).Decode(&note)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching note"})
+			return
+		}
+		c.JSON(http.StatusOK, note)
+	}
+}
+
+// once the note is made for an order then hardly any chance that the customer will update it
+// so no update note function is created here

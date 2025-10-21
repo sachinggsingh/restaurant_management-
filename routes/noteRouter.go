@@ -12,4 +12,5 @@ func NoteRouter(incomingRoutes *gin.Engine) {
 	// noteRoutes := incomingRoutes.Group("/note")
 	incomingRoutes.POST("/createNote", controller.CreateNote())
 	incomingRoutes.GET("/getNotes", controller.GetNotes())
+	incomingRoutes.GET("/getNote/:note_id", controller.GetNote())
 }
