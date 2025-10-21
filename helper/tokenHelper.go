@@ -88,12 +88,24 @@ func ValidateToken(signedToken string) (claims *SignedDetails, msg string) {
 			return []byte(SecretKey), nil
 		},
 	)
+	if err != nil || token == nil {
+		if err != nil {
+			msg = err.Error()
+		} else {
+			msg = "invalid token"
+		}
+		return
+	}
 
 	// if it is not vali
 	claims, ok := token.Claims.(*SignedDetails)
-	if !ok {
+	if !ok || claims == nil {
 		msg = "the token is invalid"
-		msg = err.Error()
+		return
+	}
+
+	if claims.ExpiresAt == nil {
+		msg = "token has no expiry"
 		return
 	}
 
