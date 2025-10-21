@@ -5,13 +5,11 @@ import (
 	"net/http"
 	"os"
 
-	// "resturnat-management/database"
+	"resturnat-management/routes"
 
-	// "resturnat-management/routes"
+	middleware "resturnat-management/middleware"
 
 	"github.com/gin-gonic/gin"
-	// "go.mongodb.org/mongo-driver/mongo"
-	//  middle"resturant-management/middleware"
 )
 
 // var foodCollection *mongo.Collection = database.OpenCollection(database.Client, "Food")
@@ -31,15 +29,15 @@ func main() {
 			"message": "pong",
 		})
 	})
-	// routes.UserRouter(router)
-	// router.Use(middleware.AuthMiddleware())
+	routes.UserRouter(router)
+	router.Use(middleware.Authentication())
 
-	// routes.FoodRouter(router)
-	// routes.MenuRouter(router)
-	// routes.OrderRouter(router)
-	// routes.OrderItemRouter(router)
-	// routes.TableRouter(router)
-	// routes.InvoiceRouter(router)
+	routes.FoodRouter(router)
+	routes.MenuRouter(router)
+	routes.OrderRouter(router)
+	routes.OrderItemRouter(router)
+	routes.TableRouter(router)
+	routes.InvoiceRouter(router)
 	// router.NoteRouter(router)
 
 	router.Run(":" + port)

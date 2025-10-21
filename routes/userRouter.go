@@ -13,7 +13,7 @@ func UserRouter(incommingRoutes *gin.Engine) {
 	incommingRoutes.POST("/login", controller.Login())
 
 	incommingRoutes.GET("/user/:id", controller.GetUser())
-	incommingRoutes.GET("/users", controller.GetAllUsers())
+	// incommingRoutes.GET("/users", controller.GetAllUsers())
 
 	// if i want to i will in future if it is needed
 	// incommingRouter.PUT("/user/:id", controller.UpdateUser)
