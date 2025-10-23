@@ -114,46 +114,45 @@ func Signup() gin.HandlerFunc {
 		}
 
 		defer cancel()
+
 		c.JSON(http.StatusOK, resultInsertNumber)
+		c.JSON(http.StatusOK, gin.H{"token": token, "refreshToken": refreshtoken})
 	}
 }
 
 func Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
-		var user models.User
-		var foundUser models.User
 
-		// binding the data coming from the request to the user model struct so that go can understand it
-		if err := c.BindJSON(&user); err != nil {
+		var loginData models.User // for incoming login credentials
+		var foundUser models.User // for fetching user from DB
+
+		// bind JSON to loginData
+		if err := c.BindJSON(&loginData); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// finding the user with the email
-		err := userCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser)
-		defer cancel()
+		// find the user by email
+		err := userCollection.FindOne(ctx, bson.M{"email": loginData.Email}).Decode(&foundUser)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "email or password is incorrect"})
 			return
 		}
 
 		// verify password
-		passwordIsValid, msg := VerifyPassword(*user.Password, *foundUser.Password)
+		passwordIsValid, msg := VerifyPassword(*loginData.Password, *foundUser.Password)
 		if !passwordIsValid {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
 			return
 		}
 
-		// if all fine then generate new tokens
+		// generate tokens
 		token, refreshToken, _ := helper.GenerateAllTokens(*foundUser.Email, *foundUser.FirstName, *foundUser.LastName, foundUser.User_id)
-
 		helper.UpdateAllTokens(token, refreshToken, foundUser.User_id)
 
-		// finally send the response
 		c.JSON(http.StatusOK, gin.H{"token": token, "refresh_token": refreshToken})
-
 	}
 }
 
@@ -166,7 +165,7 @@ func HashPassword(password string) string {
 }
 
 func VerifyPassword(userPassword string, providedPassword string) (bool, string) {
-	err := brcypt.CompareHashAndPassword([]byte(userPassword), []byte(providedPassword))
+	err := brcypt.CompareHashAndPassword([]byte(providedPassword), []byte(userPassword))
 	check := true
 	msg := ""
 	if err != nil {

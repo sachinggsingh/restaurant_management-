@@ -10,7 +10,7 @@ func UserRouter(incommingRoutes *gin.Engine) {
 
 	// Use middleware if needed
 	incommingRoutes.POST("/signup", controller.Signup())
-	incommingRoutes.POST("/login", controller.Login())
+	incommingRoutes.POST("/user/login", controller.Login())
 
 	incommingRoutes.GET("/user/:id", controller.GetUser())
 	// incommingRoutes.GET("/users", controller.GetAllUsers())
