@@ -8,7 +8,7 @@ import (
 
 type Order struct {
 	ID         primitive.ObjectID `bson:"_id"`
-	Order_id   string             `json:"order_id" validate:"required"`
+	Order_id   string             `json:"order_id"`
 	Order_date time.Time          `json:"order_date" validate:"required"`
 	Table_id   *string            `json:"table_id" validate:"required"`
 	// Food_id      *string            `json:"food_id" validate:"required"`
