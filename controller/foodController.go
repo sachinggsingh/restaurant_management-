@@ -2,20 +2,26 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 	"math"
 	"net/http"
+
+	// "resturnat-management/config"
 	"resturnat-management/database"
 	"resturnat-management/models"
 	"strconv"
 	"time"
 
+	config "resturnat-management/config"
+
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 var foodCollection *mongo.Collection = database.OpenCollection(database.Client, "food")
@@ -26,7 +32,7 @@ func GetAllFoods() gin.HandlerFunc {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		// pagination
+		// Retrieve pagination params as before
 		recordPerPage, err := strconv.Atoi(c.Query("recordPerPage"))
 		if err != nil || recordPerPage < 1 {
 			recordPerPage = 10
@@ -40,7 +46,22 @@ func GetAllFoods() gin.HandlerFunc {
 			startIndex, _ = strconv.Atoi(s)
 		}
 
-		// aggegation
+		// Create a unique cache key for this query
+		cacheKey := fmt.Sprintf("foods:page=%d:perPage=%d:startIndex=%d", page, recordPerPage, startIndex)
+
+		// Check Redis cache
+		cached, err := config.RDB.Get(ctx, cacheKey).Result()
+		if err == nil {
+			// Cache hit - unmarshal and return cached data
+			var cachedData bson.M
+			if err := json.Unmarshal([]byte(cached), &cachedData); err == nil {
+				c.JSON(http.StatusOK, cachedData)
+				return
+			}
+			// If unmarshal fails, continue to fetch from DB
+		}
+
+		// Cache miss - fetch from MongoDB
 		matchStage := bson.D{{Key: "$match", Value: bson.D{}}}
 		groupStage := bson.D{
 			{Key: "$group", Value: bson.D{
@@ -63,16 +84,27 @@ func GetAllFoods() gin.HandlerFunc {
 			matchStage, groupStage, projectStage,
 		})
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while listing food items"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while listing food items"})
+			return
 		}
+
 		var allFoods []bson.M
 		if err = result.All(ctx, &allFoods); err != nil {
 			log.Fatal(err)
 		}
 		if len(allFoods) == 0 {
-			c.JSON(http.StatusOK, gin.H{"total_count": 0, "food_items": []interface{}{}})
+			response := bson.M{"total_count": 0, "food_items": []interface{}{}}
+			// Cache empty result with shorter TTL
+			jsonData, _ := json.Marshal(response)
+			config.RDB.Set(ctx, cacheKey, jsonData, 1*time.Minute)
+			c.JSON(http.StatusOK, response)
 			return
 		}
+
+		// Cache the result with TTL
+		jsonData, _ := json.Marshal(allFoods[0])
+		config.RDB.Set(ctx, cacheKey, jsonData, 5*time.Minute)
+
 		c.JSON(http.StatusOK, allFoods[0])
 	}
 }
@@ -80,15 +112,35 @@ func GetAllFoods() gin.HandlerFunc {
 func GetFood() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		foodId := c.Param("food_id")
-		var food models.Food
-
-		err := foodCollection.FindOne(ctx, bson.M{"food_id": foodId}).Decode(&food)
 		defer cancel()
+
+		foodId := c.Param("food_id")
+		cacheKey := fmt.Sprintf("food:%s", foodId)
+
+		// Try to get cached food
+		cached, err := config.RDB.Get(ctx, cacheKey).Result()
+		if err == nil {
+			// Cache hit - unmarshal and return cached item
+			var food models.Food
+			if err := json.Unmarshal([]byte(cached), &food); err == nil {
+				c.JSON(http.StatusOK, food)
+				return
+			}
+			// If unmarshal fails, query DB
+		}
+
+		// Cache miss - fetch from MongoDB
+		var food models.Food
+		err = foodCollection.FindOne(ctx, bson.M{"food_id": foodId}).Decode(&food)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while fetching the food item"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while fetching the food item"})
 			return
 		}
+
+		// Cache the food data
+		jsonData, _ := json.Marshal(food)
+		config.RDB.Set(ctx, cacheKey, jsonData, 10*time.Minute)
+
 		c.JSON(http.StatusOK, food)
 	}
 }

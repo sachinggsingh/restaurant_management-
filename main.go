@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
+	"resturnat-management/config"
 	"resturnat-management/routes"
 
 	middleware "resturnat-management/middleware"
@@ -31,6 +33,10 @@ func main() {
 	})
 	routes.UserRouter(router)
 	router.Use(middleware.Authentication())
+
+	if err := config.InitRedis(); err != nil {
+		log.Fatal(err)
+	}
 
 	routes.FoodRouter(router)
 	routes.MenuRouter(router)
